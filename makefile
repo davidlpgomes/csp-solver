@@ -1,42 +1,34 @@
 CXX = g++
 CXXFLAGS = -pedantic-errors -Wall -Wextra -Werror -O3
 
-BUILD = build
-OBJ_DIR = $(BUILD)/objects
-EXEC_DIR = $(BUILD)/exec
+TARGET = csp
 
-INCLUDE = -I src/
-SRC = $(wildcard src/*.cpp)
+all: $(TARGET)
+debug: $(TARGET)-debug
 
-TARGET = cspsolver
+$(TARGET): restriction.o csp.o backtracking.o main.o
+	$(CXX) -o $(TARGET) $(CXXFLAGS) restriction.o csp.o backtracking.o main.o
 
-OBJECTS = $(SRC:%.cpp=$(OBJ_DIR)/%.o)
-DEPENDENCIES = $(OBJECTS:.o=.d)
+$(TARGET)-debug: restriction.o csp.o backtracking-debug.o main-debug.o
+	$(CXX) -o $(TARGET) $(CXXFLAGS) -DDEBUG restriction.o csp.o backtracking.o main.o
 
-all: build $(EXEC_DIR)/$(TARGET)
+main.o: src/main.cpp
+	$(CXX) $(CXXFLAGS) -c src/main.cpp
 
-build:
-	@mkdir -p $(OBJ_DIR)
-	@mkdir -p $(EXEC_DIR)
+main-debug.o: src/main.cpp
+	$(CXX) $(CXXFLAGS) -DDEBUG -c src/main.cpp
 
-$(OBJ_DIR)/%.o: %.cpp
-	@mkdir -p $(@D)
-	$(CXX) $(CXXFLAGS) $(INCLUDE) -c $< -MMD -o $@
+backtracking.o: src/backtracking.hpp src/backtracking.cpp
+	$(CXX) $(CXXFLAGS) -c src/backtracking.cpp
 
-$(EXEC_DIR)/$(TARGET): $(OBJECTS)
-	@mkdir -p $(@D)
-	$(CXX) $(CXXFLAGS) -o $(EXEC_DIR)/$(TARGET) $^
+backtracking-debug.o: src/backtracking.hpp src/backtracking.cpp
+	$(CXX) $(CXXFLAGS) -DDEBUG -c src/backtracking.cpp
 
--include $(DEPENDENCIES)
+csp.o: src/csp.hpp src/csp.cpp
+	$(CXX) $(CXXFLAGS) -c src/csp.cpp
 
-.PHONY: all build clean info
+restriction.o: src/restriction.hpp src/restriction.cpp
+	$(CXX) $(CXXFLAGS) -c src/restriction.cpp
 
 clean:
-	@echo "[*] Removing build directory: ${BUILD}"
-	rm -rf $(BUILD)
-
-info:
-	@echo "[*] Executable directory: ${EXEC_DIR}"
-	@echo "[*] Object directory: ${OBJ_DIR}"
-	@echo "[*] Sources: ${SRC}"
-	@echo "[*] Objects: ${OBJECTS}"
+	rm -f $(TARGET) *.o
