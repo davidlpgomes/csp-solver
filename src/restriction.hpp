@@ -15,7 +15,7 @@ class Restriction {
         static Restriction* fromInput();
 
         // type: 0 -> invalid values, 1 -> valid values
-        char type;
+        int type;
 
         unsigned scopeSize;
         unsigned tupleQty;

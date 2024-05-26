@@ -9,8 +9,9 @@ Restriction::Restriction() {}
 Restriction* Restriction::fromInput() {
     Restriction *r{new Restriction};
 
-    std::cin >> r->type;
-    r->type = r->type == 'V' ? 1 : 0;
+    char type;
+    std::cin >> type;
+    r->type = type == 'V' ? 1 : 0;
 
     std::cin >> r->scopeSize;
 
