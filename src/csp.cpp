@@ -38,8 +38,50 @@ Csp *Csp::fromInput() {
     Restriction *r;
     for (unsigned i = 0; i < csp->numRestr; i++) {
         r = Restriction::fromInput();
+
+        // If scope size is 1, change the variable's domain
+        // instead of adding another restriction
+        if (r->scopeSize == 1) {
+            std::set<int> &d = csp->domains[r->scope[0] - 1];
+            std::vector<std::vector<int>>::iterator itScope;
+
+            if (r->type == 0) {
+                // Invalid values, remove them from domain
+                for (itScope = r->tuples.begin(); itScope != r->tuples.end();
+                     ++itScope)
+                    d.erase((*itScope)[0]);
+            } else {
+                // Valid values, remove from the domain the values that
+                // are not allowed
+                std::set<int>::iterator itDomain;
+                std::set<int> scopeSingleValues;
+
+                for (itScope = r->tuples.begin(); itScope != r->tuples.end();
+                     ++itScope)
+                    scopeSingleValues.insert((*itScope)[0]);
+
+                std::set<int>::iterator itSingle;
+
+                for (itDomain = d.begin(); itDomain != d.end();) {
+                    itSingle = scopeSingleValues.find(*itDomain);
+
+                    if (itSingle != scopeSingleValues.end()) {
+                        ++itDomain;
+                        continue;
+                    }
+
+                    itDomain = d.erase(itDomain);
+                }
+            }
+
+            delete r;
+            continue;
+        }
+
         csp->restrictions.push_back(r);
     }
+
+    csp->numRestr = csp->restrictions.size();
 
     return csp;
 }
