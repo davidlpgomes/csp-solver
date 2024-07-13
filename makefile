@@ -1,5 +1,5 @@
 CXX = g++
-CXXFLAGS = -pedantic-errors -Wall -Wextra -Werror -O3
+CXXFLAGS = -pedantic-errors -Wall -Wextra -Werror -O3 -g
 
 TARGET = csp
 
