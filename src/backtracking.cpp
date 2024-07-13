@@ -4,7 +4,6 @@
 
 using namespace csp;
 
-
 int getVariableIdxAtRestrScope(Restriction *r, unsigned variableIdx) {
     // Returns the index of the variable in the restriction
     // Returns -1 if the variable is not present in the restriction
@@ -17,12 +16,8 @@ int getVariableIdxAtRestrScope(Restriction *r, unsigned variableIdx) {
     return -1;
 }
 
-int isValueValidInRestriction(
-    Restriction *r,
-    std::vector<int> &s,
-    int scopeIdx,
-    int value
-) {
+int isValueValidInRestriction(Restriction *r, std::vector<int> &s, int scopeIdx,
+                              int value) {
     int matchedAnyTuple = 0;
 
     if (scopeIdx == 0 && r->scopeSize == 1) {
@@ -39,21 +34,21 @@ int isValueValidInRestriction(
     int tupleMatch;
 
     for (unsigned i = 0; i < r->tupleQty; i++) {
-        #ifdef DEBUG
-        std::cout << "\t\tChecking if assignment match tuple " << \
-            i + 1 << std::endl;
+#ifdef DEBUG
+        std::cout << "\t\tChecking if assignment match tuple " << i + 1
+                  << std::endl;
         std::cout << "\t\t\tScope index: " << scopeIdx << "\n";
-        #endif
+#endif
 
         tupleMatch = 1;
 
         for (int j = scopeIdx; j >= 0; j--) {
-            #ifdef DEBUG
+#ifdef DEBUG
             std::cout << "\t\t\tTuple value: " << r->tuples[i][j] << "\n";
             std::cout << "\t\t\tSolution index: " << r->scope[j] - 1 << "\n";
-            std::cout << "\t\t\tAssignment value: " << \
-                s[r->scope[j] - 1] << "\n";
-            #endif
+            std::cout << "\t\t\tAssignment value: " << s[r->scope[j] - 1]
+                      << "\n";
+#endif
 
             if (r->tuples[i][j] != s[r->scope[j] - 1]) {
                 tupleMatch = 0;
@@ -72,20 +67,16 @@ int isValueValidInRestriction(
     return !(matchedAnyTuple ^ r->type);
 }
 
-int isValueValid(
-    Csp *csp,
-    std::vector<int> &s,
-    unsigned variableIdx,
-    int value
-) {
+int isValueValid(Csp *csp, std::vector<int> &s, unsigned variableIdx,
+                 int value) {
     // Check if value at index idx in solution s is valid
     Restriction *r{nullptr};
     int result, scopeIdx;
 
-    #ifdef DEBUG
-    std::cout << "Checking if value " << value << " in x" << \
-        variableIdx + 1 << " is valid" << std::endl;
-    #endif
+#ifdef DEBUG
+    std::cout << "Checking if value " << value << " in x" << variableIdx + 1
+              << " is valid" << std::endl;
+#endif
 
     for (unsigned i = 0; i < csp->numRestr; i++) {
         r = csp->restrictions[i];
@@ -105,26 +96,23 @@ int isValueValid(
         if (r->scope[scopeIdx] != variableIdx + 1)
             continue;
 
-        #ifdef DEBUG
-        std::cout << "\tx" << variableIdx + 1 << " is present in " << \
-            "restriction " << i + 1 << " (type " << r->type << \
-            ")" << std::endl;
-        #endif
+#ifdef DEBUG
+        std::cout << "\tx" << variableIdx + 1 << " is present in "
+                  << "restriction " << i + 1 << " (type " << r->type << ")"
+                  << std::endl;
+#endif
 
         result = isValueValidInRestriction(r, s, scopeIdx, value);
 
-        if (!result) return false;
+        if (!result)
+            return false;
     }
 
     return true;
 }
 
-
-int Backtracking::backtracking(
-    Csp *csp,
-    std::vector<int> &solution,
-    unsigned i
-) {
+int Backtracking::backtracking(Csp *csp, std::vector<int> &solution,
+                               unsigned i) {
     if (i == csp->numVars) {
         // Found solution
         for (unsigned j = 0; j < csp->numVars; j++)
@@ -147,17 +135,15 @@ int Backtracking::backtracking(
 
         res = backtracking(csp, solution, i + 1);
 
-        if (res == 1) return 1;
+        if (res == 1)
+            return 1;
     }
 
     return -1;
 }
-    
-void Backtracking::runBacktracking(Csp *csp) {
-    std::vector<int> solution;
 
-    for (unsigned i = 0; i < csp->numVars; i++)
-        solution.push_back(0);
+void Backtracking::runBacktracking(Csp *csp) {
+    std::vector<int> solution(csp->numVars, 0);
 
     int res = backtracking(csp, solution, 0);
 

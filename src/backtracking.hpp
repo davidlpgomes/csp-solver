@@ -12,9 +12,10 @@ class Backtracking {
         virtual ~Backtracking() = default;
 
         static void runBacktracking(Csp *csp);
+
     private:
-        static int backtracking(
-            Csp *csp, std::vector<int> &solution, unsigned i);
+        static int backtracking(Csp *csp, std::vector<int> &solution,
+                                unsigned i);
 };
 
 } // namespace csp

@@ -3,7 +3,6 @@
 
 #include <vector>
 
-
 namespace csp {
 
 class Restriction {
@@ -12,7 +11,7 @@ class Restriction {
 
         virtual ~Restriction() = default;
 
-        static Restriction* fromInput();
+        static Restriction *fromInput();
 
         // type: 0 -> invalid values, 1 -> valid values
         int type;

@@ -7,13 +7,14 @@ using namespace csp;
 Csp::Csp() {};
 
 Csp::~Csp() {
-    std::vector<Restriction*>::iterator it{this->restrictions.begin()};
+    std::vector<Restriction *>::iterator it{this->restrictions.begin()};
 
     for (; it != this->restrictions.end(); ++it)
-        if (*it != nullptr) delete *it;
+        if (*it != nullptr)
+            delete *it;
 }
 
-Csp* Csp::fromInput() {
+Csp *Csp::fromInput() {
     Csp *csp{new Csp};
 
     std::cin >> csp->numVars;
@@ -36,7 +37,7 @@ Csp* Csp::fromInput() {
 
     Restriction *r;
     for (unsigned i = 0; i < csp->numRestr; i++) {
-        r = Restriction::fromInput(); 
+        r = Restriction::fromInput();
         csp->restrictions.push_back(r);
     }
 
@@ -65,15 +66,16 @@ void Csp::print() {
         std::cout << "\tRestrição " << i + 1 << ":" << std::endl;
 
         std::cout << "\t\tTipo: ";
-        if (!r->type) std::cout << "valores inválidos";
-        else std::cout << "valores válidos";
+        if (!r->type)
+            std::cout << "valores inválidos";
+        else
+            std::cout << "valores válidos";
         std::cout << std::endl;
 
         std::cout << "\t\tEscopo (" << r->scopeSize << "): ";
         for (unsigned j = 0; j < r->scopeSize; j++)
             std::cout << r->scope[j] << " ";
         std::cout << std::endl;
-
 
         std::cout << "\t\tTuplas (" << r->tupleQty << "): ";
         for (unsigned j = 0; j < r->tupleQty; j++) {

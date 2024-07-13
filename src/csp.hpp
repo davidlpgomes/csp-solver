@@ -6,7 +6,6 @@
 
 #include "restriction.hpp"
 
-
 namespace csp {
 
 class Csp {
@@ -15,10 +14,10 @@ class Csp {
 
         virtual ~Csp();
 
-        static Csp* fromInput();
+        static Csp *fromInput();
 
         void print();
-    
+
         unsigned numVars;
         unsigned numRestr;
 
@@ -26,10 +25,8 @@ class Csp {
         // the variable at index i + 1.
         std::vector<std::set<int>> domains;
 
-        std::vector<Restriction*> restrictions;
-
+        std::vector<Restriction *> restrictions;
 };
-
 
 }; // namespace csp
 

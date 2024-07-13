@@ -6,7 +6,7 @@ using namespace csp;
 
 Restriction::Restriction() {}
 
-Restriction* Restriction::fromInput() {
+Restriction *Restriction::fromInput() {
     Restriction *r{new Restriction};
 
     char type;
@@ -28,7 +28,7 @@ Restriction* Restriction::fromInput() {
 
         for (unsigned j = 0; j < r->scopeSize; j++) {
             std::cin >> v;
-            tuple.push_back(v); 
+            tuple.push_back(v);
         }
 
         r->tuples.push_back(tuple);
