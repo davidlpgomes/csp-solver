@@ -26,6 +26,10 @@ class Csp {
         std::vector<std::set<int>> domains;
 
         std::vector<Restriction *> restrictions;
+
+        // For each variable, stores the index of the restrictions that has the
+        // var in the scope
+        std::vector<std::vector<Restriction *>> variablesRestrictions;
 };
 
 }; // namespace csp

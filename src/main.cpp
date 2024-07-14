@@ -1,20 +1,16 @@
-#include <iostream>
-
 #include "backtracking.hpp"
 #include "csp.hpp"
+#include "debug.hpp"
 
 using namespace csp;
 
 int main() {
     Csp *csp{Csp::fromInput()};
 
-#ifdef DEBUG
-    std::cout << "INFO: Running in DEBUG mode." << std::endl;
-
-    std::cout << "\n---------- PROBLEMA:" << std::endl;
-    csp->print();
-    std::cout << "---------------------" << std::endl;
-#endif
+    DPRINT("INFO: Running in DEBUG mode.\n");
+    DPRINT("\n---------- PROBLEMA:\n");
+    D(csp->print());
+    DPRINT("---------------------\n");
 
     // Backtracking
     Backtracking::runBacktracking(csp);

@@ -1,4 +1,5 @@
 #include "backtracking.hpp"
+#include "debug.hpp"
 
 #include <iostream>
 
@@ -34,21 +35,15 @@ int isValueValidInRestriction(Restriction *r, std::vector<int> &s, int scopeIdx,
     int tupleMatch;
 
     for (unsigned i = 0; i < r->tupleQty; i++) {
-#ifdef DEBUG
-        std::cout << "\t\tChecking if assignment match tuple " << i + 1
-                  << std::endl;
-        std::cout << "\t\t\tScope index: " << scopeIdx << "\n";
-#endif
+        DPRINT("\t\tChecking if assignment match tuple %u\n", i + 1);
+        DPRINT("\t\t\tScope index: %u\n", scopeIdx);
 
         tupleMatch = 1;
 
         for (int j = scopeIdx; j >= 0; j--) {
-#ifdef DEBUG
-            std::cout << "\t\t\tTuple value: " << r->tuples[i][j] << "\n";
-            std::cout << "\t\t\tSolution index: " << r->scope[j] - 1 << "\n";
-            std::cout << "\t\t\tAssignment value: " << s[r->scope[j] - 1]
-                      << "\n";
-#endif
+            DPRINT("\t\t\tTuple value: %d\n", r->tuples[i][j]);
+            DPRINT("\t\t\tSolution index: %d\n", r->scope[j] - 1);
+            DPRINT("\t\t\tAssignment value: %d\n", s[r->scope[j] - 1]);
 
             if (r->tuples[i][j] != s[r->scope[j] - 1]) {
                 tupleMatch = 0;
@@ -73,13 +68,14 @@ int isValueValid(Csp *csp, std::vector<int> &s, unsigned variableIdx,
     Restriction *r{nullptr};
     int result, scopeIdx;
 
-#ifdef DEBUG
-    std::cout << "Checking if value " << value << " in x" << variableIdx + 1
-              << " is valid" << std::endl;
-#endif
+    DPRINT("Checking if value %d in x%u is valid\n", value, variableIdx + 1);
 
-    for (unsigned i = 0; i < csp->numRestr; i++) {
-        r = csp->restrictions[i];
+    std::vector<Restriction *>::iterator it =
+        csp->variablesRestrictions[variableIdx].begin();
+
+    unsigned i = 0;
+    for (; it != csp->variablesRestrictions[variableIdx].end(); ++it) {
+        r = *it;
 
         /*
         scopeIdx = getVariableIdxAtRestrScope(r, variableIdx);
@@ -96,16 +92,15 @@ int isValueValid(Csp *csp, std::vector<int> &s, unsigned variableIdx,
         if (r->scope[scopeIdx] != variableIdx + 1)
             continue;
 
-#ifdef DEBUG
-        std::cout << "\tx" << variableIdx + 1 << " is present in "
-                  << "restriction " << i + 1 << " (type " << r->type << ")"
-                  << std::endl;
-#endif
+        DPRINT("\tx%u is present in restriction %u (type %d)\n",
+               variableIdx + 1, i + 1, r->type);
 
         result = isValueValidInRestriction(r, s, scopeIdx, value);
 
         if (!result)
             return false;
+
+        i++;
     }
 
     return true;

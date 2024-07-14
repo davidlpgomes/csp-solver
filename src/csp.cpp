@@ -19,6 +19,11 @@ Csp *Csp::fromInput() {
 
     std::cin >> csp->numVars;
 
+    for (unsigned i = 0; i < csp->numVars; i++) {
+        std::vector<Restriction *> res;
+        csp->variablesRestrictions.push_back(res);
+    }
+
     unsigned domainSize, v;
 
     for (unsigned i = 0; i < csp->numVars; i++) {
@@ -77,6 +82,9 @@ Csp *Csp::fromInput() {
             delete r;
             continue;
         }
+
+        for (unsigned i = 0; i < r->scopeSize; i++)
+            csp->variablesRestrictions[r->scope[i] - 1].push_back(r);
 
         csp->restrictions.push_back(r);
     }
