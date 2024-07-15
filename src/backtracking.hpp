@@ -15,7 +15,8 @@ class Backtracking {
 
     private:
         static int backtracking(Csp *csp, std::vector<int> &solution,
-                                unsigned i);
+                                unsigned i, unsigned numVarsAssigned,
+                                std::vector<bool> &varsAssigned);
 };
 
 } // namespace csp
