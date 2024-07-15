@@ -28,8 +28,10 @@ class Csp {
         std::vector<Restriction *> restrictions;
 
         // For each variable, stores the index of the restrictions that has the
-        // var in the scope
-        std::vector<std::vector<Restriction *>> variablesRestrictions;
+        // var in the scope (pair: scope index at restriction, pointer to
+        // restriction)
+        std::vector<std::vector<std::pair<unsigned, Restriction *>>>
+            variablesRestrictions;
 };
 
 }; // namespace csp

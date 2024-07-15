@@ -1,4 +1,5 @@
 #include "csp.hpp"
+#include "debug.hpp"
 
 #include <iostream>
 
@@ -14,13 +15,52 @@ Csp::~Csp() {
             delete *it;
 }
 
+void cleanDomain(Csp *csp) {
+    /* If there is a restriction with type VALID with some variable in its
+     * scope, the values that are not present in some tuple are removed from the
+     * variable's domain */
+    std::vector<Restriction *>::iterator it{csp->restrictions.begin()};
+    std::vector<std::vector<int>>::iterator itTuples;
+    std::vector<int>::iterator itTuple;
+    Restriction *r;
+
+    std::vector<std::set<int>> newDomains(csp->numVars);
+
+    for (; it != csp->restrictions.end(); ++it) {
+        r = *it;
+
+        if (r->type == 0)
+            continue;
+
+        itTuples = r->tuples.begin();
+        for (; itTuples != r->tuples.end(); ++itTuples) {
+            int tupleIdx = 0;
+            itTuple = itTuples->begin();
+
+            for (; itTuple != itTuples->end(); ++itTuple) {
+                newDomains[r->scope[tupleIdx] - 1].insert(*itTuple);
+                tupleIdx++;
+            }
+        }
+    }
+
+    for (unsigned i = 0; i < csp->numVars; i++) {
+        if (newDomains[i].size() == 0)
+            continue;
+
+        csp->domains[i] = newDomains[i];
+    }
+
+    return;
+}
+
 Csp *Csp::fromInput() {
     Csp *csp{new Csp};
 
     std::cin >> csp->numVars;
 
     for (unsigned i = 0; i < csp->numVars; i++) {
-        std::vector<Restriction *> res;
+        std::vector<std::pair<unsigned, Restriction *>> res;
         csp->variablesRestrictions.push_back(res);
     }
 
@@ -41,12 +81,14 @@ Csp *Csp::fromInput() {
     std::cin >> csp->numRestr;
 
     Restriction *r;
+    unsigned restId = 1;
+
     for (unsigned i = 0; i < csp->numRestr; i++) {
         r = Restriction::fromInput();
 
         // If scope size is 1, change the variable's domain
         // instead of adding another restriction
-        if (r->scopeSize == 1) {
+        if (r->scopeSize == 1 && r->type == 0) {
             std::set<int> &d = csp->domains[r->scope[0] - 1];
             std::vector<std::vector<int>>::iterator itScope;
 
@@ -83,62 +125,69 @@ Csp *Csp::fromInput() {
             continue;
         }
 
+        r->numRestr = restId;
+        restId++;
+
         for (unsigned i = 0; i < r->scopeSize; i++)
-            csp->variablesRestrictions[r->scope[i] - 1].push_back(r);
+            csp->variablesRestrictions[r->scope[i] - 1].push_back(
+                std::make_pair(i, r));
 
         csp->restrictions.push_back(r);
     }
 
     csp->numRestr = csp->restrictions.size();
 
+    cleanDomain(csp);
+
     return csp;
 }
 
 void Csp::print() {
-    std::cout << "Número de variáveis: " << this->numVars << std::endl;
+    DPRINT("Número de variáveis: %u\n", this->numVars);
 
     for (unsigned i = 0; i < this->numVars; i++) {
         std::set<int>::iterator it{this->domains[i].begin()};
 
-        std::cout << "\tDomínio x" << i + 1 << ": ";
+        DPRINT("\tDomínio x%u: ", i + 1);
 
         for (; it != this->domains[i].end(); ++it)
-            std::cout << *it << " ";
+            DPRINT("%d ", *it);
 
-        std::cout << "\n";
+        DPRINT("\n");
     }
 
-    std::cout << "Número de restrições: " << this->numRestr << std::endl;
+    DPRINT("Número de restrições: %u\n", this->numRestr);
 
     Restriction *r;
     for (unsigned i = 0; i < this->numRestr; i++) {
         r = this->restrictions[i];
-        std::cout << "\tRestrição " << i + 1 << ":" << std::endl;
+        DPRINT("\tRestrição %u:\n", i + 1);
 
-        std::cout << "\t\tTipo: ";
-        if (!r->type)
-            std::cout << "valores inválidos";
-        else
-            std::cout << "valores válidos";
-        std::cout << std::endl;
+        DPRINT("\t\tTipo: valores ");
+        if (!r->type) {
+            DPRINT("inválidos");
+        } else {
+            DPRINT("válidos");
+        }
+        DPRINT("\n");
 
-        std::cout << "\t\tEscopo (" << r->scopeSize << "): ";
+        DPRINT("\t\tEscopo (%u): ", r->scopeSize);
         for (unsigned j = 0; j < r->scopeSize; j++)
-            std::cout << r->scope[j] << " ";
-        std::cout << std::endl;
+            DPRINT("%u ", r->scope[j]);
+        DPRINT("\n");
 
-        std::cout << "\t\tTuplas (" << r->tupleQty << "): ";
+        DPRINT("\t\tTuplas (%u): ", r->tupleQty);
         for (unsigned j = 0; j < r->tupleQty; j++) {
             unsigned tupleSize{(unsigned) r->tuples[j].size()};
-            std::cout << "(";
+            DPRINT("(");
 
             for (unsigned k = 0; k < tupleSize - 1; k++)
-                std::cout << r->tuples[j][k] << " ";
+                DPRINT("%d ", r->tuples[j][k]);
 
-            std::cout << r->tuples[j][tupleSize - 1] << ") ";
+            DPRINT("%d) ", r->tuples[j][tupleSize - 1]);
         }
 
-        std::cout << std::endl;
+        DPRINT("\n");
     }
 
     return;

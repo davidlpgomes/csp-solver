@@ -13,6 +13,9 @@ class Restriction {
 
         static Restriction *fromInput();
 
+        // Restriction "ID", starts at 1
+        unsigned numRestr;
+
         // type: 0 -> invalid values, 1 -> valid values
         int type;
 
