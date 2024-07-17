@@ -5,14 +5,14 @@
 
 using namespace csp;
 
-int isValueValidInRestriction(Restriction *r, std::vector<int> &s) {
-    int matchedAnyTuple = 0;
-    int tupleMatch;
+bool isValueValidInRestriction(Restriction *r, std::vector<int> &s) {
+    bool matchedAnyTuple = false;
+    bool tupleMatch;
 
     for (unsigned i = 0; i < r->tupleQty; i++) {
         DPRINT("\t\tChecking if assignment match tuple %u\n", i + 1);
 
-        tupleMatch = 1;
+        tupleMatch = true;
 
         for (unsigned j = 0; j < r->scopeSize; j++) {
             DPRINT("\t\t\tTuple value: %d\n", r->tuples[i][j]);
@@ -20,7 +20,7 @@ int isValueValidInRestriction(Restriction *r, std::vector<int> &s) {
             DPRINT("\t\t\tAssignment value: %d\n", s[r->scope[j] - 1]);
 
             if (r->tuples[i][j] != s[r->scope[j] - 1]) {
-                tupleMatch = 0;
+                tupleMatch = false;
                 break;
             }
         }
@@ -32,18 +32,17 @@ int isValueValidInRestriction(Restriction *r, std::vector<int> &s) {
         }
 
         DPRINT("\t\tMatched tuple %u\n", i + 1);
-        matchedAnyTuple = 1;
+        matchedAnyTuple = true;
         break;
     }
 
     return !(matchedAnyTuple ^ r->type);
 }
 
-int isValueValid(Csp *csp, std::vector<int> &s, unsigned variableIdx,
-                 unsigned numVarsAssigned, std::vector<bool> &varsAssigned) {
+bool isValueValid(Csp *csp, std::vector<int> &s, unsigned variableIdx,
+                  unsigned numVarsAssigned, std::vector<bool> &varsAssigned) {
     // Check if value at index idx in solution s is valid
     Restriction *r{nullptr};
-    int result;
 
     DPRINT("Checking if value %d in x%u is valid\n", s[variableIdx],
            variableIdx + 1);
@@ -74,9 +73,7 @@ int isValueValid(Csp *csp, std::vector<int> &s, unsigned variableIdx,
         DPRINT("\tx%u is present in restriction %u (type %d)\n",
                variableIdx + 1, r->numRestr, r->type);
 
-        result = isValueValidInRestriction(r, s);
-
-        if (!result)
+        if (!isValueValidInRestriction(r, s))
             return false;
 
         i++;
@@ -85,21 +82,20 @@ int isValueValid(Csp *csp, std::vector<int> &s, unsigned variableIdx,
     return true;
 }
 
-int Backtracking::backtracking(Csp *csp, std::vector<int> &solution, unsigned i,
-                               unsigned numVarsAssigned,
-                               std::vector<bool> &varsAssigned) {
+bool Backtracking::backtracking(Csp *csp, std::vector<int> &solution,
+                                unsigned i, unsigned numVarsAssigned,
+                                std::vector<bool> &varsAssigned) {
     if (i == csp->numVars) {
         // Found solution
         for (unsigned j = 0; j < csp->numVars; j++)
             std::cout << "x" << j + 1 << " = " << solution[j] << std::endl;
 
-        return 1;
+        return true;
     }
 
     // Domain
     std::set<int> &d{csp->domains[i]};
     std::set<int>::iterator it{d.begin()};
-    int res;
 
     for (; it != d.end(); ++it) {
         solution[i] = *it;
@@ -113,25 +109,21 @@ int Backtracking::backtracking(Csp *csp, std::vector<int> &solution, unsigned i,
             continue;
         }
 
-        res = backtracking(csp, solution, i + 1, numVarsAssigned, varsAssigned);
+        if (backtracking(csp, solution, i + 1, numVarsAssigned, varsAssigned))
+            return true;
 
         numVarsAssigned--;
         varsAssigned[i] = false;
-
-        if (res == 1)
-            return 1;
     }
 
-    return -1;
+    return false;
 }
 
 void Backtracking::runBacktracking(Csp *csp) {
     std::vector<int> solution(csp->numVars, 0);
     std::vector<bool> varsAssigned(csp->numVars, false);
 
-    int res = backtracking(csp, solution, 0, 0, varsAssigned);
-
-    if (res == -1)
+    if (!backtracking(csp, solution, 0, 0, varsAssigned))
         std::cout << "INVIAVEL\n";
 
     return;
