@@ -19,6 +19,7 @@ Restriction *Restriction::fromInput() {
     for (unsigned i = 0; i < r->scopeSize; i++) {
         std::cin >> v;
         r->scope.push_back(v);
+        r->varsIdxAtTuple[v] = i;
     }
 
     std::cin >> r->tupleQty;

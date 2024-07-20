@@ -1,6 +1,7 @@
 #ifndef RESTRICTION_HPP
 #define RESTRICTION_HPP
 
+#include <map>
 #include <vector>
 
 namespace csp {
@@ -22,6 +23,7 @@ class Restriction {
         unsigned scopeSize;
         unsigned tupleQty;
 
+        std::map<unsigned, unsigned> varsIdxAtTuple;
         std::vector<unsigned> scope;
 
         // Uses vector due to possible scope increase
