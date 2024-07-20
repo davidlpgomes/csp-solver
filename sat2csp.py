@@ -16,6 +16,10 @@ def main(dimacs_file: str, csp_output: str) -> None:
     with open(dimacs_file, 'r') as file:
         for line in file:
             line = line.rstrip()
+
+            if line == '':
+                continue
+
             if not line.rstrip()[0] in ignore:
                 lines.append(line)
 
@@ -64,8 +68,7 @@ def main(dimacs_file: str, csp_output: str) -> None:
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(
         prog='SAT2CSP',
-        description='Convert SAT (DIMACS) format to CSP instance'
-    )
+        description='Convert SAT (DIMACS) format to CSP instance')
 
     parser.add_argument('dimacs_file')
     parser.add_argument('csp_output')
@@ -73,4 +76,3 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     main(args.dimacs_file, args.csp_output)
-
