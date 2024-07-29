@@ -3,6 +3,7 @@
 
 #include <iostream>
 #include <limits>
+#include <set>
 #include <stack>
 
 using namespace csp;
@@ -16,37 +17,38 @@ bool reviewRestrictionGAC(Csp *csp, Restriction *r, unsigned xi) {
     unsigned xiScopeIdx{r->varsIdxAtTuple[xi + 1]};
     unsigned dSize = csp->domains[xi].size();
 
-    bool foundMatch, changedDomain = false;
+    bool changedDomain = false;
+
+    std::set<int> domainValuesValid;
+    for (unsigned ti = 0; ti < r->tupleQty; ti++) {
+        if (r->tuplesInvalidCount[ti] > 0) {
+            DPRINT("[GAC-3] \t\tTuple %u is invalid\n", ti + 1);
+            continue;
+        }
+
+        int value = r->tuples[ti][xiScopeIdx];
+
+        if (!csp->domainsIdxValid[xi][csp->domainsIdxs[xi][value]])
+            continue;
+
+        domainValuesValid.insert(value);
+    }
+
+    std::set<int>::const_iterator validIt{domainValuesValid.begin()};
 
     for (unsigned di = 0; di < dSize; di++) {
         if (!csp->domainsIdxValid[xi][di])
             continue;
 
-        DPRINT("[GAC-3] \tChecking if value %d is valid for variable x%u\n",
-               csp->domains[xi][di], xi + 1);
-
-        foundMatch = false;
-
-        for (unsigned ti = 0; ti < r->tupleQty; ti++) {
-            if (r->tuplesInvalidCount[ti] > 0) {
-                DPRINT("[GAC-3] \t\tTuple %u is invalid\n", ti + 1);
-                continue;
-            }
-
-            if (csp->domains[xi][di] == r->tuples[ti][xiScopeIdx]) {
-                DPRINT(
-                    "[GAC-3] \t\tTuple %u is valid, restriction is satisfied\n",
-                    ti + 1);
-                foundMatch = true;
-                break;
-            }
-        }
-
-        if (foundMatch)
+        // Domains need to be sorted!
+        if (csp->domains[xi][di] == *validIt) {
+            ++validIt;
             continue;
+        }
 
         DPRINT("[GAC-3] \tRemoving value %d from x%u domain\n",
                csp->domains[xi][di], xi + 1);
+
         csp->removeValueFromVarDomain(xi, di);
         changedDomain = true;
     }
@@ -249,15 +251,14 @@ bool Backtracking::backtracking(Csp *csp, std::vector<int> &solution,
             return true;
         }
 
-        csp->removeValueFromVarDomain(i, di);
-
+        gac3(csp);
         int nextVarIdx = getSmallestDomainVarIdx(csp, varsAssigned);
 
         if (backtracking(csp, solution, nextVarIdx, numVarsAssigned,
                          varsAssigned))
             return true;
 
-        gac3(csp);
+        csp->removeValueFromVarDomain(i, di);
     }
 
     csp->resetVarDomain(i);

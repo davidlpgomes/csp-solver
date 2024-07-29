@@ -2,7 +2,6 @@
 #define CSP_HPP
 
 #include <queue>
-#include <set>
 #include <vector>
 
 #include "restriction.hpp"
@@ -30,6 +29,9 @@ class Csp {
         std::vector<std::vector<int>> domains;
         std::vector<unsigned> domainsValidSize;
         std::vector<std::vector<bool>> domainsIdxValid;
+
+        // For each variable, stores the idx of each domain value
+        std::vector<std::map<int, unsigned>> domainsIdxs;
 
         std::vector<Restriction *> restrictions;
 

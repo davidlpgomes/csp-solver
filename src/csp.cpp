@@ -27,9 +27,15 @@ Csp *Csp::fromInput() {
         std::vector<int> domain(domainSize);
         std::vector<bool> domainValid(domainSize, true);
 
-        for (unsigned j = 0; j < domainSize; j++)
-            std::cin >> domain[j];
+        std::map<int, unsigned> domainIdxs;
+        csp->domainsIdxs.push_back(domainIdxs);
 
+        for (unsigned j = 0; j < domainSize; j++) {
+            std::cin >> domain[j];
+            csp->domainsIdxs[i][domain[j]] = j;
+        }
+
+        // Needs to be sorted for reviewRestrictionGAC
         std::sort(domain.begin(), domain.end());
 
         csp->domains.push_back(domain);
