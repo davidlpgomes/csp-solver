@@ -28,6 +28,7 @@ class Restriction {
 
         // Uses vector due to possible scope increase
         std::vector<std::vector<int>> tuples;
+        std::vector<unsigned> tuplesInvalidCount;
 };
 
 } // namespace csp

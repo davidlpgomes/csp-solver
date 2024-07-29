@@ -1,6 +1,7 @@
 #include "csp.hpp"
 #include "debug.hpp"
 
+#include <algorithm>
 #include <iostream>
 
 using namespace csp;
@@ -15,143 +16,108 @@ Csp::~Csp() {
             delete *it;
 }
 
-void cleanDomain(Csp *csp) {
-    /* If there is a restriction with type VALID with some variable in its
-     * scope, the values that are not present in some tuple are removed from the
-     * variable's domain */
-    std::vector<Restriction *>::iterator it{csp->restrictions.begin()};
-    std::vector<std::vector<int>>::iterator itTuples;
-    std::vector<int>::iterator itTuple;
-    Restriction *r;
-
-    std::vector<std::set<int>> newDomains(csp->numVars);
-
-    for (; it != csp->restrictions.end(); ++it) {
-        r = *it;
-
-        if (r->type == 0)
-            continue;
-
-        itTuples = r->tuples.begin();
-        for (; itTuples != r->tuples.end(); ++itTuples) {
-            int tupleIdx = 0;
-            itTuple = itTuples->begin();
-
-            for (; itTuple != itTuples->end(); ++itTuple) {
-                newDomains[r->scope[tupleIdx] - 1].insert(*itTuple);
-                tupleIdx++;
-            }
-        }
-    }
-
-    for (unsigned i = 0; i < csp->numVars; i++) {
-        if (newDomains[i].size() == 0)
-            continue;
-
-        csp->domains[i] = newDomains[i];
-    }
-
-    return;
-}
-
 Csp *Csp::fromInput() {
     Csp *csp{new Csp};
 
     std::cin >> csp->numVars;
 
-    for (unsigned i = 0; i < csp->numVars; i++) {
-        std::vector<std::pair<unsigned, Restriction *>> res;
-        csp->variablesRestrictions.push_back(res);
-    }
-
-    unsigned domainSize, v;
-
+    unsigned domainSize;
     for (unsigned i = 0; i < csp->numVars; i++) {
         std::cin >> domainSize;
-        std::set<int> domain;
+        std::vector<int> domain(domainSize);
+        std::vector<bool> domainValid(domainSize, true);
 
-        for (unsigned j = 0; j < domainSize; j++) {
-            std::cin >> v;
-            domain.emplace(v);
-        }
+        for (unsigned j = 0; j < domainSize; j++)
+            std::cin >> domain[j];
+
+        std::sort(domain.begin(), domain.end());
 
         csp->domains.push_back(domain);
+        csp->domainsValidSize.push_back(domainSize);
+        csp->domainsIdxValid.push_back(domainValid);
+
+        std::vector<std::pair<unsigned, Restriction *>> res;
+        csp->variablesRestrictions.push_back(res);
+
+        std::queue<unsigned *> q;
+        csp->tuplesInvalidadedAddrs.push_back(q);
     }
 
     std::cin >> csp->numRestr;
 
     Restriction *r;
-    unsigned restId = 1;
-
+    DPRINT("Running GAC3\n");
     for (unsigned i = 0; i < csp->numRestr; i++) {
         r = Restriction::fromInput();
-
-        // If scope size is 1, change the variable's domain
-        // instead of adding another restriction
-        if (r->scopeSize == 1 && r->type == 0) {
-            std::set<int> &d = csp->domains[r->scope[0] - 1];
-            std::vector<std::vector<int>>::iterator itScope;
-
-            if (r->type == 0) {
-                // Invalid values, remove them from domain
-                for (itScope = r->tuples.begin(); itScope != r->tuples.end();
-                     ++itScope)
-                    d.erase((*itScope)[0]);
-            } else {
-                // Valid values, remove from the domain the values that
-                // are not allowed
-                std::set<int>::iterator itDomain;
-                std::set<int> scopeSingleValues;
-
-                for (itScope = r->tuples.begin(); itScope != r->tuples.end();
-                     ++itScope)
-                    scopeSingleValues.insert((*itScope)[0]);
-
-                std::set<int>::iterator itSingle;
-
-                for (itDomain = d.begin(); itDomain != d.end();) {
-                    itSingle = scopeSingleValues.find(*itDomain);
-
-                    if (itSingle != scopeSingleValues.end()) {
-                        ++itDomain;
-                        continue;
-                    }
-
-                    itDomain = d.erase(itDomain);
-                }
-            }
-
-            delete r;
-            continue;
-        }
-
-        r->numRestr = restId;
-        restId++;
-
-        for (unsigned i = 0; i < r->scopeSize; i++)
-            csp->variablesRestrictions[r->scope[i] - 1].push_back(
-                std::make_pair(i, r));
-
+        r->numRestr = i + 1;
         csp->restrictions.push_back(r);
+
+        for (unsigned j = 0; j < r->scopeSize; j++)
+            csp->variablesRestrictions[r->scope[j] - 1].push_back(
+                std::make_pair(j, r));
     }
 
-    csp->numRestr = csp->restrictions.size();
-
-    cleanDomain(csp);
-
     return csp;
+}
+
+void Csp::removeValueFromVarDomain(unsigned xi, unsigned di) {
+    // Iterates over all tuples of the restrictions that has xi in its scope
+    // that matches the 'value' in domain[di] and increment its
+    // tupleInvalidCount
+
+    unsigned restrCount = this->variablesRestrictions[xi].size();
+
+    Restriction *r;
+    unsigned scopeIdx;
+
+    for (unsigned ri = 0; ri < restrCount; ri++) {
+        scopeIdx = this->variablesRestrictions[xi][ri].first;
+        r = this->variablesRestrictions[xi][ri].second;
+
+        for (unsigned ti = 0; ti < r->tupleQty; ti++) {
+            if (r->tuples[ti][scopeIdx] != this->domains[xi][di])
+                continue;
+
+            r->tuplesInvalidCount[ti]++;
+            this->tuplesInvalidadedAddrs[xi].push(&r->tuplesInvalidCount[ti]);
+        }
+    }
+
+    this->domainsIdxValid[xi][di] = false;
+    this->domainsValidSize[xi]--;
+
+    return;
+}
+
+void Csp::resetVarDomain(unsigned xi) {
+    // Reset domain of var x<xi + 1>
+    while (!this->tuplesInvalidadedAddrs[xi].empty()) {
+        unsigned *tuplesInvalidadedAddr =
+            this->tuplesInvalidadedAddrs[xi].front();
+        this->tuplesInvalidadedAddrs[xi].pop();
+
+        *tuplesInvalidadedAddr -= 1;
+    }
+
+    std::fill(this->domainsIdxValid[xi].begin(),
+              this->domainsIdxValid[xi].end(), true);
+    this->domainsValidSize[xi] = this->domains[xi].size();
+
+    return;
 }
 
 void Csp::print() {
     DPRINT("Número de variáveis: %u\n", this->numVars);
 
-    for (unsigned i = 0; i < this->numVars; i++) {
-        std::set<int>::iterator it{this->domains[i].begin()};
+    for (unsigned xi = 0; xi < this->numVars; xi++) {
+        DPRINT("\tDomínio x%u: ", xi + 1);
 
-        DPRINT("\tDomínio x%u: ", i + 1);
-
-        for (; it != this->domains[i].end(); ++it)
-            DPRINT("%d ", *it);
+        unsigned dSize = this->domains[xi].size();
+        for (unsigned di = 0; di != dSize; di++) {
+            if (this->domainsIdxValid[xi][di]) {
+                DPRINT("%d ", this->domains[xi][di]);
+            }
+        }
 
         DPRINT("\n");
     }
@@ -161,7 +127,7 @@ void Csp::print() {
     Restriction *r;
     for (unsigned i = 0; i < this->numRestr; i++) {
         r = this->restrictions[i];
-        DPRINT("\tRestrição %u:\n", i + 1);
+        DPRINT("\tRestrição %u:\n", r->numRestr);
 
         DPRINT("\t\tTipo: valores ");
         if (!r->type) {

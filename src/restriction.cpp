@@ -33,6 +33,7 @@ Restriction *Restriction::fromInput() {
         }
 
         r->tuples.push_back(tuple);
+        r->tuplesInvalidCount.push_back(0);
     }
 
     return r;

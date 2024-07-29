@@ -7,8 +7,8 @@ using namespace csp;
 int main() {
     Csp *csp{Csp::fromInput()};
 
-    DPRINT("INFO: Running in DEBUG mode.\n");
     DPRINT("\n---------- PROBLEMA:\n");
+    DPRINT("INFO: Running in DEBUG mode.\n");
     D(csp->print());
     DPRINT("---------------------\n");
 
