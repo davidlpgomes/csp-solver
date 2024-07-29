@@ -250,13 +250,14 @@ bool Backtracking::backtracking(Csp *csp, std::vector<int> &solution,
         }
 
         csp->removeValueFromVarDomain(i, di);
-        gac3(csp);
 
         int nextVarIdx = getSmallestDomainVarIdx(csp, varsAssigned);
 
         if (backtracking(csp, solution, nextVarIdx, numVarsAssigned,
                          varsAssigned))
             return true;
+
+        gac3(csp);
     }
 
     csp->resetVarDomain(i);
